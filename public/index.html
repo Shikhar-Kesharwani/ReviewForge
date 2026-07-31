@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviewForge — AI Pair Programmer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --panel-bg: #161b22;
+      --border-color: #30363d;
+      --primary: #0088ff;
+      --accent: #3fb950;
+      --text-main: #c9d1d9;
+      --text-muted: #8b949e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    sidebar {
+      width: 320px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border-color);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-card {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.85rem;
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .status-item:last-child { margin-bottom: 0; }
+    label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+    input, select {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    /* Main Chat */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .chat-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-history {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .msg {
+      max-width: 80%;
+      padding: 14px 18px;
+      border-radius: 10px;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .msg-user {
+      align-self: flex-end;
+      background: #1f2937;
+      border-left: 4px solid var(--primary);
+    }
+    .msg-ai {
+      align-self: flex-start;
+      background: var(--panel-bg);
+      border-left: 4px solid var(--accent);
+      white-space: pre-wrap;
+      font-family: 'Fira Code', monospace;
+    }
+    .chat-input-area {
+      padding: 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 12px;
+    }
+    textarea {
+      flex: 1;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px;
+      border-radius: 8px;
+      resize: none;
+      height: 60px;
+      font-family: inherit;
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+<sidebar>
+  <div class="brand">🔨 ReviewForge</div>
+  <div style="font-size: 0.8rem; color: var(--text-muted);">Vercel Frontend + Render API</div>
+
+  <div class="status-card">
+    <div class="status-item">
+      <span>Backend Status:</span>
+      <span id="backend-status" style="color: var(--accent);">Checking...</span>
+    </div>
+    <div class="status-item">
+      <span>Database:</span>
+      <span id="db-mode">PostgreSQL</span>
+    </div>
+    <div class="status-item">
+      <span>Vector DB:</span>
+      <span id="vec-mode">Pinecone</span>
+    </div>
+  </div>
+
+  <div>
+    <label>Render Backend API URL</label>
+    <input type="text" id="api-url" value="http://localhost:8000" placeholder="https://your-backend.onrender.com">
+  </div>
+
+  <div>
+    <label>Select AI Model</label>
+    <select id="model-select">
+      <option value="gemini/gemini-2.0-flash">Gemini 2.0 Flash</option>
+      <option value="gpt-4o">GPT-4o</option>
+      <option value="anthropic/claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+    </select>
+  </div>
+</sidebar>
+
+<main>
+  <div class="chat-header">
+    <h3>Pair Programming Chat</h3>
+    <button onclick="checkBackendHealth()" style="padding: 6px 12px; font-size: 0.8rem;">Ping Backend</button>
+  </div>
+
+  <div class="chat-history" id="chat-history">
+    <div class="msg msg-ai">Hello! I am ReviewForge. How can I help you write, edit, or refactor code today?</div>
+  </div>
+
+  <div class="chat-input-area">
+    <textarea id="user-prompt" placeholder="Ask ReviewForge to write code or solve a bug..."></textarea>
+    <button onclick="sendMessage()">Send ✈</button>
+  </div>
+</main>
+
+<script>
+  async function checkBackendHealth() {
+    const baseUrl = document.getElementById('api-url').value.trim();
+    const statusEl = document.getElementById('backend-status');
+    statusEl.innerText = "Connecting...";
+    statusEl.style.color = "#e3b341";
+
+    try {
+      const res = await fetch(`${baseUrl}/status`);
+      const data = await res.json();
+      statusEl.innerText = "Online 🟢";
+      statusEl.style.color = "#3fb950";
+      document.getElementById('db-mode').innerText = data.database.mode;
+      document.getElementById('vec-mode').innerText = data.vector_store.mode;
+    } catch (e) {
+      statusEl.innerText = "Offline 🔴";
+      statusEl.style.color = "#f85149";
+    }
+  }
+
+  async function sendMessage() {
+    const promptInput = document.getElementById('user-prompt');
+    const prompt = promptInput.value.trim();
+    if (!prompt) return;
+
+    const chatHistory = document.getElementById('chat-history');
+    
+    // Append User Msg
+    const userDiv = document.createElement('div');
+    userDiv.className = 'msg msg-user';
+    userDiv.innerText = prompt;
+    chatHistory.appendChild(userDiv);
+
+    promptInput.value = '';
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    // Append Loading AI Msg
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'msg msg-ai';
+    aiDiv.innerText = "ReviewForge is thinking...";
+    chatHistory.appendChild(aiDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    const baseUrl = document.getElementById('api-url').value.trim();
+    const model = document.getElementById('model-select').value;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt, model: model })
+      });
+      const data = await res.json();
+      aiDiv.innerText = data.response || data.detail || "Completed.";
+    } catch (err) {
+      aiDiv.innerText = "❌ Error connecting to Render Backend API: " + err.message;
+    }
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+
+  // Initial Check
+  checkBackendHealth();
+</script>
+
+</body>
+</html>
