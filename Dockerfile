@@ -1,29 +1,24 @@
 FROM python:3.11-slim
 
 LABEL maintainer="Shikhar <shikhar@example.com>"
-LABEL description="ReviewForge — AI pair programming in your terminal"
-LABEL version="0.1.0"
+LABEL description="ReviewForge Universal Backend API"
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy project files
-COPY pyproject.toml ./
-COPY reviewforge/ ./reviewforge/
+COPY pyproject.toml requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install ReviewForge
+COPY reviewforge/ ./reviewforge/
 RUN pip install --no-cache-dir -e .
 
-# Set git safe directory for mounted volumes
-RUN git config --global --add safe.directory /workspace
+RUN git config --global --add safe.directory "*"
 
-# Default working directory for mounted projects
-WORKDIR /workspace
+EXPOSE 8000
 
-ENTRYPOINT ["reviewforge"]
-CMD ["--help"]
+# Runs API server programmatically reading PORT env var
+CMD ["python", "-m", "reviewforge.api"]

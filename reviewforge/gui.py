@@ -1,7 +1,6 @@
 """
-ReviewForge GUI — A Streamlit-based browser interface for ReviewForge.
-Launch with: streamlit run -m reviewforge.gui
-Or via: reviewforge --gui
+ReviewForge GUI — Universal Browser Interface for ReviewForge.
+Supports both standalone local execution and client-server REST mode.
 """
 
 import os
@@ -18,9 +17,8 @@ def gui_main():
 
     gui_file = os.path.join(os.path.dirname(__file__), "_gui_app.py")
 
-    # Write the app file dynamically so it can be launched by streamlit
     app_code = _get_app_code()
-    with open(gui_file, "w") as f:
+    with open(gui_file, "w", encoding="utf-8") as f:
         f.write(app_code)
 
     import subprocess
@@ -46,6 +44,10 @@ st.markdown("""
   .stApp { background: #0d1117; color: #c9d1d9; }
   .rf-title { font-size: 2rem; font-weight: 800; color: #0088ff; }
   .rf-subtitle { color: #8b949e; font-size: 1rem; }
+  .status-badge {
+      background: #161b22; border-radius: 6px; padding: 8px 12px;
+      font-size: 0.85rem; border: 1px solid #30363d; margin-bottom: 6px;
+  }
   .chat-bubble-user {
       background: #1c2128; border-radius: 10px; padding: 12px 16px;
       margin: 8px 0; border-left: 3px solid #0088ff;
@@ -59,12 +61,35 @@ st.markdown("""
 
 # ─── Header ────────────────────────────────────────────────────────────────────
 st.markdown('<div class="rf-title">🔨 ReviewForge</div>', unsafe_allow_html=True)
-st.markdown('<div class="rf-subtitle">AI pair programming in your browser</div>', unsafe_allow_html=True)
+st.markdown('<div class="rf-subtitle">AI pair programming — Dual-Architecture Stack</div>', unsafe_allow_html=True)
 st.divider()
 
-# ─── Sidebar ───────────────────────────────────────────────────────────────────
+# ─── System Architecture Status ───────────────────────────────────────────────
 with st.sidebar:
-    st.header("⚙️ Settings")
+    st.header("⚙️ System Status")
+    
+    try:
+        from reviewforge.db_config import get_db_status
+        from reviewforge.vector_store import get_vector_status
+        db_stat = get_db_status()
+        vec_stat = get_vector_status()
+
+        db_icon = "☁️" if db_stat["is_cloud"] else "💾"
+        vec_icon = "🌲" if vec_stat["is_cloud"] else "⚡"
+
+        st.markdown(f\'\'\'
+        <div class="status-badge">
+            {db_icon} <b>Database:</b> {db_stat["mode"]}
+        </div>
+        <div class="status-badge">
+            {vec_icon} <b>Vector DB:</b> {vec_stat["mode"]}
+        </div>
+        \'\'\', unsafe_allow_html=True)
+    except Exception as e:
+        st.caption(f"Status: {e}")
+
+    st.divider()
+    st.header("🎛️ Settings")
 
     model = st.selectbox(
         "Model",
@@ -75,12 +100,6 @@ with st.sidebar:
             "anthropic/claude-3-5-sonnet-20241022",
             "deepseek/deepseek-chat",
         ],
-        index=0,
-    )
-
-    edit_format = st.selectbox(
-        "Edit Format",
-        ["diff", "whole", "udiff", "ask", "architect"],
         index=0,
     )
 
@@ -139,12 +158,10 @@ with st.form("chat_form", clear_on_submit=True):
 if submit and user_input.strip():
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    # Build context from uploaded files
     file_context = ""
     for fobj in st.session_state.files:
         file_context += f"\\n\\n### {fobj[\'name\']}\\n```\\n{fobj[\'content\']}\\n```"
 
-    # Call LLM
     with st.spinner("ReviewForge is thinking..."):
         try:
             import litellm
@@ -184,5 +201,9 @@ if submit and user_input.strip():
 
 # ─── Footer ────────────────────────────────────────────────────────────────────
 st.divider()
-st.caption("🔨 ReviewForge — Built by Shikhar | [GitHub](https://github.com/AyushGU12/ReviewForge)")
+st.caption("🔨 ReviewForge — Built by Shikhar | Dual-Architecture Stack")
 '''
+
+
+if __name__ == "__main__":
+    gui_main()
