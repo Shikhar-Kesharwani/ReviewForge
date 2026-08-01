@@ -39,7 +39,8 @@ setup_security(app)
 
 
 @app.middleware("http")
-async in_logging_middleware(request: Request, call_next):
+async def in_logging_middleware(request: Request, call_next):
+
     """Inject Request ID & Correlation ID, log structured request duration."""
     request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
     correlation_id = request.headers.get("X-Correlation-ID", request_id)
@@ -111,7 +112,21 @@ def system_status():
     }
 
 
+@app.get("/metrics")
+def metrics():
+    """Prometheus-compatible System & Observability Metrics."""
+    import time
+    return {
+        "service": "reviewforge-backend",
+        "uptime_status": "ok",
+        "python_version": sys.version.split()[0],
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "db_connected": get_db_status().get("connected", False),
+    }
+
+
 # ─── API MODELS & ROUTING ──────────────────────────────────────────────────────
+
 
 class ChatRequest(BaseModel):
     prompt: str

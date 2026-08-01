@@ -5,12 +5,19 @@ LABEL description="ReviewForge Streamlit GUI Frontend"
 
 WORKDIR /app
 
+# Security: Create non-root user and set permissions
+RUN adduser --disabled-password --gecos "" appuser \
+    && chown -R appuser:appuser /app
+
 COPY pyproject.toml requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY reviewforge/ ./reviewforge/
 RUN pip install --no-cache-dir -e .
 
+USER appuser
+
 EXPOSE 8501
 
 CMD ["streamlit", "run", "reviewforge/gui.py", "--server.address=0.0.0.0", "--server.port=8501"]
+

@@ -29,3 +29,8 @@ env/
 .reviewforge.chat.history.md
 .reviewforge.input.history
 .reviewforge.tags.cache.v3
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example

@@ -570,9 +570,8 @@ def register_models(model_settings_fname: str) -> List[ModelSettings]:
     ValueError
         When the YAML is malformed or missing required fields.
     """
-    global _KNOWN_MODELS_BY_NAME
-
     with open(model_settings_fname, "r", encoding="utf-8") as fh:
+
         raw = yaml.safe_load(fh)
 
     if not isinstance(raw, dict) or "models" not in raw:

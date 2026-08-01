@@ -21,6 +21,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
         
         # HSTS (Strict-Transport-Security) in production
         env = os.getenv("ENVIRONMENT", "development").lower()

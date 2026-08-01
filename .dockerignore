@@ -12,4 +12,6 @@ build
 tests/
 .github/
 *.md
+!README.md
 .reviewforge*
+

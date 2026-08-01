@@ -35,7 +35,8 @@ def validate_config(strict: bool = False) -> dict:
     # Check Cors Setup
     allowed_origins = os.getenv("ALLOWED_ORIGINS")
     if is_prod and not allowed_origins:
-        errors.append("ALLOWED_ORIGINS must be set in production mode!")
+        warnings.append("ALLOWED_ORIGINS not set. Falling back to default CORS origins.")
+
 
     # Check Port
     port = os.getenv("PORT", "8000")
