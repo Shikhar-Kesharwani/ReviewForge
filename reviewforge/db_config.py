@@ -2,6 +2,7 @@
 Database Abstraction Layer for ReviewForge.
 Dynamically switches between Cloud PostgreSQL (if DATABASE_URL is set)
 and local SQLite (default fallback).
+Includes Enterprise Connection Pooling, Pre-ping validation, and session lifecycle.
 """
 
 import os
@@ -42,8 +43,24 @@ def get_engine():
     global _engine
     if _engine is None:
         db_url = get_database_url()
-        connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
-        _engine = create_engine(db_url, connect_args=connect_args, pool_pre_ping=True)
+        
+        if db_url.startswith("sqlite"):
+            _engine = create_engine(
+                db_url,
+                connect_args={"check_same_thread": False},
+            )
+        else:
+            # Enterprise Connection Pooling for PostgreSQL (Neon/Supabase/Render)
+            pool_size = int(os.getenv("DB_POOL_SIZE", "10"))
+            max_overflow = int(os.getenv("DB_MAX_OVERFLOW", "20"))
+            _engine = create_engine(
+                db_url,
+                pool_size=pool_size,
+                max_overflow=max_overflow,
+                pool_recycle=1800,  # Recycle connections every 30 mins
+                pool_pre_ping=True,  # Validate connection health before checkout
+            )
+            
     return _engine
 
 
@@ -71,6 +88,7 @@ def get_db_status() -> dict:
         "is_cloud": cloud,
         "connected": False,
         "url_masked": db_url.split("@")[-1] if "@" in db_url else db_url,
+        "pool_size": int(os.getenv("DB_POOL_SIZE", "10")) if cloud else "N/A",
     }
     
     try:
