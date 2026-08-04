@@ -68,8 +68,8 @@ def on_startup():
 
 # ─── HEALTH & DIAGNOSTIC ENDPOINTS ─────────────────────────────────────────────
 
-@app.get("/")
-@app.get("/health")
+@app.api_route("/", methods=["GET", "HEAD"])
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
     """Simple Liveness Health Check (100% Backward Compatible)."""
     return {

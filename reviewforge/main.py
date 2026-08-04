@@ -83,3 +83,12 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check():
+    return {"status": "ok", "service": "reviewforge-backend"}
+
+@app.get("/ready")
+async def readiness_check():
+    return {"status": "ready"}

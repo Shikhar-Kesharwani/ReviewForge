@@ -142,3 +142,8 @@ pytest tests/ -v
 ## 📜 License
 
 Distributed under the MIT License. Built with ❤️ by Shikhar.
+
+
+## Deployment
+- Cloud Run CI/CD configured in `.github/workflows/deploy-cloudrun.yml`.
+- Run `gcloud run deploy` to deploy the backend.

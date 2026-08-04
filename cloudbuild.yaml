@@ -1,0 +1,13 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: ['run','deploy','$_SERVICE_NAME','--image=gcr.io/$PROJECT_ID/$_SERVICE_NAME','--region=asia-south1','--platform=managed','--allow-unauthenticated','--memory=$_MEMORY','--min-instances=0','--max-instances=3','--port=$_PORT']
+substitutions:
+  _SERVICE_NAME: reviewforge-backend
+  _MEMORY: 512Mi
+  _PORT: '8000'
+images: ['gcr.io/$PROJECT_ID/$_SERVICE_NAME']
