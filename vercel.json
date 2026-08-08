@@ -1,8 +1,10 @@
 {
   "version": 2,
   "name": "reviewforge-frontend",
+  "outputDirectory": "public",
   "cleanUrls": true,
   "routes": [
     { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
+
