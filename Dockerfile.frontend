@@ -1,6 +1,7 @@
 FROM python:3.11-slim
 
-LABEL maintainer="Shikhar <shikhar@example.com>"
+LABEL maintainer="Ayush <ayushgu02@gmail.com>"
+
 LABEL description="ReviewForge Streamlit GUI Frontend"
 
 WORKDIR /app
